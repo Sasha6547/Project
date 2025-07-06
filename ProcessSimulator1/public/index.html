@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель индикаторов симуляции процессов</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #1b263b;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 500;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            color: var(--primary);
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: var(--secondary);
+        }
+
+        .value-display {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .value-display h2 {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .unit {
+            font-size: 16px;
+            color: #777;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        .status-inactive {
+            background: var(--danger);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container header-content">
+        <div class="logo">  ≽^•⩊•^≼  </div>
+        <h1>Мониторинг Промышленных Процессов</h1>
+    </div>
+</header>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-button active" data-tab="voltage">Контроль Напряжения</button>
+        <button class="tab-button" data-tab="temperature">Контроль Температуры</button>
+        <button class="tab-button" data-tab="monitoring">Мониторинг Процесса</button>
+    </div>
+
+    <div id="voltage" class="tab-content active">
+        <div class="value-display">
+            <h2>Текущее Напряжение</h2>
+            <div><span class="value" id="current-voltage">0.00</span> <span class="unit">V</span></div>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <h3>Диапазон Напряжения</h3>
+                <div class="form-group">
+                    <label for="voltage-min">Минимальное Напряжение (V)</label>
+                    <input type="number" id="voltage-min" value="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="voltage-max">Максимальное Напряжение (V)</label>
+                    <input type="number" id="voltage-max" value="10" step="0.1">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Параметры Симуляции</h3>
+                <div class="form-group">
+                    <label for="voltage-step">Размер шага (V)</label>
+                    <input type="number" id="voltage-step" value="0.1" step="0.1" min="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="voltage-interval">Частота обновления (ms)</label>
+                    <input type="number" id="voltage-interval" value="1000" min="100">
+                </div>
+            </div>
+        </div>
+
+        <button id="update-voltage-btn" class="update-btn">Обновить Параметры Напряжения</button>
+    </div>
+
+    <div id="temperature" class="tab-content">
+        <div class="value-display">
+            <h2>Текущая Температура</h2>
+            <div><span class="value" id="current-temperature">0.00</span> <span class="unit">°C</span></div>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <h3>Диапазон температуры</h3>
+                <div class="form-group">
+                    <label for="temp-min">Минимальная Температура (°C)</label>
+                    <input type="number" id="temp-min" value="20" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="temp-max">Максимальная Температура (°C)</label>
+                    <input type="number" id="temp-max" value="100" step="0.1">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Параметры Симуляции</h3>
+                <div class="form-group">
+                    <label for="temp-step">Размер шага (°C)</label>
+                    <input type="number" id="temp-step" value="0.5" step="0.1" min="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="temp-interval">Частота обновления (ms)</label>
+                    <input type="number" id="temp-interval" value="1000" min="100">
+                </div>
+            </div>
+        </div>
+
+        <button id="update-temp-btn" class="update-btn">Обновить Параметры Температуры</button>
+    </div>
+
+    <div id="monitoring" class="tab-content">
+        <h2>Мониторинг процессов в реальном времени</h2>
+        <div class="chart-container">
+            <canvas id="process-chart"></canvas>
+        </div>
+
+        <div class="status-panel">
+            <h3>Статус Системы</h3>
+            <p><span class="status-indicator status-active"></span> Симуляция Напряжения: <span id="voltage-status">Active</span></p>
+            <p><span class="status-indicator status-active"></span> Симуляция Температуры: <span id="temp-status">Active</span></p>
+            <p>Последнее Обновление: <span id="last-update">-</span></p>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>Process Simulator Dashboard © 2025 | Version 1.0.0</p>
+</footer>
+
+<script src="/app.js" defer></script>
+</body>
+</html>

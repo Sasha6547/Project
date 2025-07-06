@@ -1,0 +1,20 @@
+LIBRARY ProcessSimulator
+EXPORTS
+    createVoltageSimulator
+    destroyVoltageSimulator
+    startVoltageSimulator
+    stopVoltageSimulator
+    setVoltageInterval
+    setVoltageRange
+    setVoltageStep
+    getCurrentVoltage
+    registerVoltageCallback
+    createTemperatureSimulator
+    destroyTemperatureSimulator
+    startTemperatureSimulator
+    stopTemperatureSimulator
+    setTemperatureInterval
+    setTemperatureRange
+    setTemperatureStep
+    getCurrentTemperature
+    registerTemperatureCallback
