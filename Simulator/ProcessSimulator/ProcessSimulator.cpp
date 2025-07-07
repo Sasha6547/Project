@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ProcessSimulator.h"
 #include <chrono>
+#include <random>
 
 // Конструктор симулятора напряжения
 VoltageSimulator::VoltageSimulator()
@@ -78,26 +79,27 @@ void VoltageSimulator::registerCallback(VoltageUpdateCallback callback) {
 
 // Основной цикл работы симулятора напряжения
 void VoltageSimulator::run() {
+    // Инициализация генератора случайных чисел
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(-1, 1); // Возможные значения: -1, 0, 1
+
     while (running) {
         auto start = std::chrono::steady_clock::now();
 
         {
             std::lock_guard<std::mutex> lock(mutex);
 
-            // Логика изменения напряжения (пилообразный сигнал)
-            if (increasing) {
-                currentVoltage += stepSize;
-                if (currentVoltage >= maxVoltage) {
-                    currentVoltage = maxVoltage;
-                    increasing = false;
-                }
+            // Логика случайного изменения напряжения
+            int randomStep = dist(gen); // Получаем случайное значение: -1, 0 или 1
+            currentVoltage += randomStep * stepSize;
+
+            // Ограничение напряжения в заданных пределах
+            if (currentVoltage > maxVoltage) {
+                currentVoltage = maxVoltage;
             }
-            else {
-                currentVoltage -= stepSize;
-                if (currentVoltage <= minVoltage) {
-                    currentVoltage = minVoltage;
-                    increasing = true;
-                }
+            else if (currentVoltage < minVoltage) {
+                currentVoltage = minVoltage;
             }
 
             // Вызов callback-функции, если она зарегистрирована
@@ -193,26 +195,27 @@ void TemperatureSimulator::registerCallback(TemperatureUpdateCallback callback) 
 
 // Основной цикл работы симулятора температуры
 void TemperatureSimulator::run() {
+    // Инициализация генератора случайных чисел
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dist(-1.0, 1.0); // Диапазон от -1.0 до 1.0
+
     while (running) {
         auto start = std::chrono::steady_clock::now();
 
         {
             std::lock_guard<std::mutex> lock(mutex);
 
-            // Логика изменения температуры (пилообразный сигнал)
-            if (increasing) {
-                currentTemperature += stepSize;
-                if (currentTemperature >= maxTemperature) {
-                    currentTemperature = maxTemperature;
-                    increasing = false;
-                }
+            // Логика случайного изменения температуры
+            double randomFactor = dist(gen); // Случайное значение от -1.0 до 1.0
+            currentTemperature += randomFactor * stepSize;
+
+            // Ограничение температуры в заданных пределах
+            if (currentTemperature > maxTemperature) {
+                currentTemperature = maxTemperature;
             }
-            else {
-                currentTemperature -= stepSize;
-                if (currentTemperature <= minTemperature) {
-                    currentTemperature = minTemperature;
-                    increasing = true;
-                }
+            else if (currentTemperature < minTemperature) {
+                currentTemperature = minTemperature;
             }
 
             // Вызов callback-функции, если она зарегистрирована

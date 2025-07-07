@@ -23,6 +23,7 @@ wss.on('connection', (ws) => {
         const data = {
             voltage: dll.getVoltage(), // Получение напряжения из DLL
             temperature: dll.getTemperature(), // Получение температуры из DLL
+            temperature2: dll.getTemperature2(), // Получение второй температуры из DLL
             timestamp: new Date().toISOString() // Текущая метка времени
         };
         // Отправка данных клиенту в формате JSON
@@ -54,6 +55,16 @@ app.post('/api/temperature/settings', (req, res) => {
     const { min, max, step, interval } = req.body;
     // Установка новых настроек через DLL
     dll.setTemperatureSettings(min, max, step, interval);
+    // Отправка успешного ответа
+    res.json({ status: 'success' });
+});
+
+// Роут для обновления настроек второй температуры
+app.post('/api/temperature2/settings', (req, res) => {
+    // Извлечение параметров из тела запроса
+    const { min, max, step, interval } = req.body;
+    // Установка новых настроек через DLL
+    dll.setTemperature2Settings(min, max, step, interval);
     // Отправка успешного ответа
     res.json({ status: 'success' });
 });

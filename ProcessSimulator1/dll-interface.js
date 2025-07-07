@@ -41,12 +41,15 @@ class DllWrapper {
         // Создаем экземпляры симуляторов
         this.voltageSim = simulatorLib.createVoltageSimulator();
         this.tempSim = simulatorLib.createTemperatureSimulator();
+        this.tempSim2 = simulatorLib.createTemperatureSimulator();
 
         // Устанавливаем начальные параметры симуляторов
         simulatorLib.setVoltageRange(this.voltageSim, 0, 10); // Диапазон напряжения 0-10В
         simulatorLib.setVoltageStep(this.voltageSim, 0.1); // Шаг изменения напряжения 0.1В
         simulatorLib.setTemperatureRange(this.tempSim, 20, 100); // Диапазон температуры 20-100°C
         simulatorLib.setTemperatureStep(this.tempSim, 0.5); // Шаг изменения температуры 0.5°C
+        simulatorLib.setTemperatureRange(this.tempSim2, 20, 100); // Диапазон температуры 20-100°C
+        simulatorLib.setTemperatureStep(this.tempSim2, 0.5); // Шаг изменения температуры 0.5°C
 
         // Регистрируем обработчик для корректного завершения работы
         process.on('exit', () => this.cleanup());
@@ -56,6 +59,7 @@ class DllWrapper {
     start() {
         simulatorLib.startVoltageSimulator(this.voltageSim);
         simulatorLib.startTemperatureSimulator(this.tempSim);
+        simulatorLib.startTemperatureSimulator(this.tempSim2);
     }
 
     // Метод для очистки ресурсов
@@ -72,6 +76,12 @@ class DllWrapper {
                 simulatorLib.stopTemperatureSimulator(this.tempSim);
                 simulatorLib.destroyTemperatureSimulator(this.tempSim);
                 this.tempSim = null;
+            }
+            // Останавливаем и уничтожаем симулятор температуры, если он существует
+            if (this.tempSim2) {
+                simulatorLib.stopTemperatureSimulator(this.tempSim2);
+                simulatorLib.destroyTemperatureSimulator(this.tempSim2);
+                this.tempSim2 = null;
             }
         } catch (e) {
             console.error('Cleanup error:', e);
@@ -100,6 +110,18 @@ class DllWrapper {
     // Метод для получения текущего значения температуры
     getTemperature() {
         return simulatorLib.getCurrentTemperature(this.tempSim);
+    }
+
+    // Метод для установки параметров симулятора температуры
+    setTemperature2Settings(min, max, step, interval) {
+        simulatorLib.setTemperatureRange(this.tempSim2, min, max); // Установка диапазона
+        simulatorLib.setTemperatureStep(this.tempSim2, step); // Установка шага
+        simulatorLib.setTemperatureInterval(this.tempSim2, interval); // Установка интервала
+    }
+
+    // Метод для получения текущего значения температуры
+    getTemperature2() {
+        return simulatorLib.getCurrentTemperature(this.tempSim2);
     }
 }
 

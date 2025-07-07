@@ -3,6 +3,7 @@ let voltageChart = null; // Объект графика Chart.js
 let socket = null; // WebSocket соединение
 let voltageData = []; // Массив для хранения данных напряжения
 let temperatureData = []; // Массив для хранения данных температуры
+let temperature2Data = []; // Массив для хранения данных второй температуры
 let timeLabels = []; // Массив для хранения меток времени
 let reconnectAttempts = 0; // Счетчик попыток переподключения
 const MAX_RECONNECT_ATTEMPTS = 5; // Максимальное количество попыток переподключения
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Назначение обработчиков кнопок
     document.getElementById('update-voltage-btn').addEventListener('click', updateVoltageSettings);
     document.getElementById('update-temp-btn').addEventListener('click', updateTempSettings);
+    document.getElementById('update-temp2-btn').addEventListener('click', updateTemp2Settings);
 });
 
 // Функция инициализации вкладок
@@ -63,7 +65,7 @@ function initChart() {
                     pointBorderWidth: 1 // Толщина границы точек
                 },
                 {
-                    label: 'Температура (°C)', // Подпись для данных температуры
+                    label: 'Температура 1 (°C)', // Подпись для данных температуры
                     data: temperatureData, // Данные температуры
                     borderColor: '#f72585', // Цвет линии
                     backgroundColor: 'rgba(247, 37, 133, 0.1)', // Цвет заливки
@@ -72,6 +74,19 @@ function initChart() {
                     pointRadius: 4, // Размер точек
                     pointHoverRadius: 6, // Размер точек при наведении
                     pointBackgroundColor: '#f72585', // Цвет точек
+                    pointBorderColor: '#fff', // Цвет границы точек
+                    pointBorderWidth: 1 // Толщина границы точек
+                },
+                {
+                    label: 'Температура 2 (°C)', // Подпись для данных второй температуры
+                    data: temperature2Data, // Данные второй температуры
+                    borderColor: '#4cc9f0', // Цвет линии (новый цвет для второго датчика)
+                    backgroundColor: 'rgba(76, 201, 240, 0.1)', // Цвет заливки
+                    borderWidth: 2, // Толщина линии
+                    tension: 0.4, // Натяжение кривой
+                    pointRadius: 4, // Размер точек
+                    pointHoverRadius: 6, // Размер точек при наведении
+                    pointBackgroundColor: '#4cc9f0', // Цвет точек
                     pointBorderColor: '#fff', // Цвет границы точек
                     pointBorderWidth: 1 // Толщина границы точек
                 }
@@ -160,6 +175,7 @@ function connectWebSocket() {
         // Обновление статусов на UI
         document.getElementById('voltage-status').textContent = 'Активна';
         document.getElementById('temp-status').textContent = 'Активна';
+        document.getElementById('temp2-status').textContent = 'Активна';
     };
 
     // Обработчик входящих сообщений
@@ -207,12 +223,14 @@ function updateDashboard(data) {
     // Обновление текущих значений на UI
     document.getElementById('current-voltage').textContent = data.voltage.toFixed(2);
     document.getElementById('current-temperature').textContent = data.temperature.toFixed(2);
+    document.getElementById('current-temperature2').textContent = data.temperature2.toFixed(2);
 
     // Добавление новых данных в массивы
     const now = new Date();
     timeLabels.push(now.toLocaleTimeString());
     voltageData.push(data.voltage);
     temperatureData.push(data.temperature);
+    temperature2Data.push(data.temperature2);
 
     // Ограничение количества отображаемых точек данных
     const maxDataPoints = 20;
@@ -220,13 +238,51 @@ function updateDashboard(data) {
         timeLabels.shift(); // Удаление самой старой метки времени
         voltageData.shift(); // Удаление самого старого значения напряжения
         temperatureData.shift(); // Удаление самого старого значения температуры
+        temperature2Data.shift(); // Удаление самого старого значения второй температуры
     }
 
     // Обновление данных графика
     voltageChart.data.labels = timeLabels;
     voltageChart.data.datasets[0].data = voltageData;
     voltageChart.data.datasets[1].data = temperatureData;
+    voltageChart.data.datasets[2].data = temperature2Data;
     voltageChart.update('none'); // Обновление графика без анимации
+}
+
+// Функция обновления настроек второй температуры
+async function updateTemp2Settings() {
+    const btn = document.getElementById('update-temp2-btn');
+    btn.disabled = true; // Блокировка кнопки во время запроса
+    btn.textContent = 'Обновление...'; // Изменение текста кнопки
+
+    // Получение значений из формы
+    const settings = {
+        min: parseFloat(document.getElementById('temp2-min').value),
+        max: parseFloat(document.getElementById('temp2-max').value),
+        step: parseFloat(document.getElementById('temp2-step').value),
+        interval: parseInt(document.getElementById('temp-interval').value)
+    };
+
+    try {
+        // Отправка запроса на сервер
+        const response = await fetch('/api/temperature2/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка HTTP! статус: ${response.status}`);
+        }
+
+        showNotification('Настройки температуры 2 успешно обновлены!', 'success'); // Показ уведомления об успехе
+    } catch (error) {
+        console.error('Ошибка обновления настроек температуры 2:', error);
+        showNotification('Не удалось обновить настройки температуры 2', 'error'); // Показ уведомления об ошибке
+    } finally {
+        btn.disabled = false; // Разблокировка кнопки
+        btn.textContent = 'Обновить настройки температуры 2'; // Восстановление текста кнопки
+    }
 }
 
 // Функция обновления настроек напряжения
